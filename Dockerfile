@@ -1,18 +1,35 @@
 # ---------- Dockerfile ----------
-# Use the official PHP 8.2 + Apache image
-FROM php:8.2-apache
+# Use Alpine-based PHP-FPM with Nginx for better security
+FROM php:8.3-fpm-alpine
 
-# Copy all project files to Apache web root
+# Install Nginx and other dependencies
+RUN apk add --no-cache nginx
+
+# Copy all project files to web root
 COPY . /var/www/html/
 
 # Set working directory
 WORKDIR /var/www/html
 
-# Enable Apache mod_rewrite (if you use pretty URLs)
-RUN a2enmod rewrite
+# Configure Nginx
+RUN mkdir -p /run/nginx && \
+    echo 'server { \
+        listen 80; \
+        root /var/www/html; \
+        index index.php index.html; \
+        location / { \
+            try_files $uri $uri/ /index.php?$query_string; \
+        } \
+        location ~ \.php$ { \
+            fastcgi_pass 127.0.0.1:9000; \
+            fastcgi_index index.php; \
+            include fastcgi_params; \
+            fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name; \
+        } \
+    }' > /etc/nginx/http.d/default.conf
 
-# Expose port 80 (Render automatically maps it)
+# Expose port 80
 EXPOSE 80
 
-# Start Apache server
-CMD ["apache2-foreground"]
+# Start PHP-FPM and Nginx
+CMD php-fpm -D && nginx -g 'daemon off;'

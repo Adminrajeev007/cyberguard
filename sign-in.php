@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -290,4 +290,145 @@
     </script>
 </body>
 </html>
+ -->
+<?php
+session_start();
+require_once 'includes/db_connect.php'; // Connect to PostgreSQL
 
+$message = "";
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $email = trim($_POST['email'] ?? '');
+    $password = trim($_POST['password'] ?? '');
+
+    if ($email && $password) {
+        $stmt = $pdo->prepare("SELECT id, email, password FROM users WHERE email = :email LIMIT 1");
+        $stmt->execute(['email' => $email]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($user && password_verify($password, $user['password'])) {
+            $_SESSION['user_id'] = $user['id'];
+            header("Location: dashboard.php");
+            exit;
+        } else {
+            $message = "❌ Invalid email or password";
+        }
+    } else {
+        $message = "⚠️ Please fill in all fields";
+    }
+}
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sign In - Access your CyberGuard account">
+    <title>Sign In - CyberGuard</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <style>
+        /* your same CSS — unchanged */
+        .signin-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 2rem;
+        }
+        .signin-card {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 3rem;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        .error-message {
+            background: #fee2e2;
+            color: #b91c1c;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+        /* keep rest of your styles unchanged */
+    </style>
+</head>
+<body>
+    <div class="signin-container">
+        <div>
+            <div class="signin-card">
+                <div class="signin-header">
+                    <div class="signin-logo">
+                        <div class="logo-icon">
+                            <svg width="40" height="40" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="32" height="32" rx="8" fill="#4F46E5"/>
+                                <path d="M16 8L12 12H14V18H12L16 24L20 18H18V12H20L16 8Z" fill="white"/>
+                            </svg>
+                        </div>
+                        <div class="logo-text">
+                            <h2>CyberGuard</h2>
+                            <p>Digital Bharat Initiative</p>
+                        </div>
+                    </div>
+                    <h1 class="signin-title">Welcome Back</h1>
+                    <p class="signin-subtitle">Sign in to your account to continue</p>
+                </div>
+
+                <?php if ($message): ?>
+                    <div class="error-message"><?= htmlspecialchars($message) ?></div>
+                <?php endif; ?>
+
+                <form method="POST" action="sign-in.php">
+                    <div class="form-group">
+                        <label class="form-label" for="email">Email Address</label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            name="email"
+                            class="form-input" 
+                            placeholder="you@example.com"
+                            required
+                        />
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="password">Password</label>
+                        <input 
+                            type="password" 
+                            id="password"
+                            name="password"
+                            class="form-input" 
+                            placeholder="Enter your password"
+                            required
+                        />
+                    </div>
+                    
+                    <div class="form-checkbox">
+                        <input type="checkbox" id="remember" />
+                        <label for="remember">Remember me</label>
+                    </div>
+                    
+                    <button type="submit" class="btn-submit">Sign In</button>
+                </form>
+                
+                <div class="divider">or continue with</div>
+                
+                <div class="social-signin">
+                    <button class="btn-social">Google</button>
+                    <button class="btn-social">Facebook</button>
+                </div>
+                
+                <div class="signup-link">
+                    Don't have an account? <a href="sign-up.php">Sign up</a>
+                </div>
+            </div>
+            
+            <div class="back-home">
+                <a href="index.php">← Back to Home</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
