@@ -1,0 +1,11 @@
+# ---------- render.yaml ----------
+services:
+  - type: web
+    name: cyber_project_php
+    env: docker
+    plan: free
+    autoDeploy: true
+    buildCommand: "" # Docker handles build automatically
+    startCommand: "" # Not needed for Docker apps
+    dockerfilePath: ./Dockerfile
+    branch: main # or master — match your Git branch name
